@@ -24,11 +24,11 @@ const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN;
 if (!CLIENT_ORIGIN) {
   console.log("Client origin not found!");
 }
+app.use(express.json());
 app.use(cors({ origin: "*" }));
 
 app.use("/api/order/checkout/webhook", express.raw({ type: "*/*" }));
 
-app.use(express.json());
 app.use("/api/my/user", myUserRoute);
 app.use("/api/my/restaurent", myRestaurentRoute);
 app.use("/api/restaurent", restaurentRoute);
