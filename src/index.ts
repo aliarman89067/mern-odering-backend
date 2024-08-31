@@ -7,6 +7,15 @@ import myRestaurentRoute from "./routes/myRestaurentRoute";
 import { v2 as cloudinary } from "cloudinary";
 import restaurentRoute from "./routes/restaurentRoute";
 import orderRoute from "./routes/orderRoute";
+import bodyParser = require("body-parser");
+
+declare global {
+  namespace Express {
+    interface Request {
+      rawBody?: string;
+    }
+  }
+}
 
 mongoose
   .connect(process.env.MONGODB_CONNECTION_STRING as string)
@@ -24,15 +33,23 @@ const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN;
 if (!CLIENT_ORIGIN) {
   console.log("Client origin not found!");
 }
-app.use(express.json());
 app.use(cors({ origin: "*" }));
 
+app.use(
+  bodyParser.json({
+    verify: function (req: Request, res, buf) {
+      req.rawBody = buf.toString();
+    },
+  })
+);
+app.use(bodyParser.json());
 app.use("/api/order/checkout/webhook", express.raw({ type: "*/*" }));
+app.use(express.json());
 
+app.use("/api/order", orderRoute);
 app.use("/api/my/user", myUserRoute);
 app.use("/api/my/restaurent", myRestaurentRoute);
 app.use("/api/restaurent", restaurentRoute);
-app.use("/api/order", orderRoute);
 
 app.get("/test", (req: Request, res: Response) => {
   res.send("Hello World");

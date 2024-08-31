@@ -26,8 +26,12 @@ const stripeWebhookHandler = async (req: Request, res: Response) => {
   let event;
   try {
     const sig = req.headers["stripe-signature"];
+    if (!req.rawBody) {
+      return res.status(400).json({ message: "Raw body error" });
+    }
+
     event = STRIPE.webhooks.constructEvent(
-      req.body,
+      req.rawBody,
       sig as string,
       STRIPE_WEBHOOK_SECRET
     );
