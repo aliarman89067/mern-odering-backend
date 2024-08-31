@@ -25,7 +25,7 @@ const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN;
 if (!CLIENT_ORIGIN) {
     console.log("Client origin not found!");
 }
-app.use((0, cors_1.default)({ origin: CLIENT_ORIGIN }));
+app.use((0, cors_1.default)({ origin: "*" }));
 app.use("/api/order/checkout/webhook", express_1.default.raw({ type: "*/*" }));
 app.use(express_1.default.json());
 app.use("/api/my/user", myUserRoute_1.default);
