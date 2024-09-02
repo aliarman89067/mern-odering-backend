@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const restaurent_1 = __importDefault(require("../model/restaurent"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
 const mongoose_1 = __importDefault(require("mongoose"));
+const order_1 = __importDefault(require("../model/order"));
 const getMyRestaurent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const findRestaurent = yield restaurent_1.default.findOne({ user: req.userId });
@@ -79,8 +80,48 @@ const uploadToCloudinary = (file) => __awaiter(void 0, void 0, void 0, function*
     const uploadResponse = yield cloudinary_1.default.v2.uploader.upload(dataURI);
     return uploadResponse.url;
 });
+const getMyRestaurentOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const restaurent = yield restaurent_1.default.findOne({ user: req.userId });
+        if (!restaurent) {
+            return res.status(404).json({ message: "Restaurant not fount" });
+        }
+        const orders = yield order_1.default.find({ restaurent: restaurent._id })
+            .populate("restaurent")
+            .populate("user");
+        res.json(orders);
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Something went wrong" });
+    }
+});
+const updateOrderStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const { orderId } = req.params;
+        const { status } = req.body;
+        const order = yield order_1.default.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ message: "Order not found" });
+        }
+        const restaurent = yield restaurent_1.default.findById(order.restaurent);
+        if (((_a = restaurent === null || restaurent === void 0 ? void 0 : restaurent.user) === null || _a === void 0 ? void 0 : _a._id.toString()) !== req.userId) {
+            res.status(401).send();
+        }
+        order.status = status;
+        yield order.save();
+        res.status(200).json(order);
+    }
+    catch (error) {
+        console.log(error);
+        throw new Error("Something went wrong");
+    }
+});
 exports.default = {
+    getMyRestaurentOrders,
     getMyRestaurent,
     createMyRestaurent,
     updateMyRestaurent,
+    updateOrderStatus,
 };

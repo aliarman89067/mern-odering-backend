@@ -2,6 +2,7 @@ import { Request, Response, Express } from "express";
 import Restaurent from "../model/restaurent";
 import cloudinary from "cloudinary";
 import mongoose from "mongoose";
+import Order from "../model/order";
 
 const getMyRestaurent = async (req: Request, res: Response) => {
   try {
@@ -68,8 +69,48 @@ const uploadToCloudinary = async (file: Express.Multer.File) => {
   const uploadResponse = await cloudinary.v2.uploader.upload(dataURI);
   return uploadResponse.url;
 };
+
+const getMyRestaurentOrders = async (req: Request, res: Response) => {
+  try {
+    const restaurent = await Restaurent.findOne({ user: req.userId });
+    if (!restaurent) {
+      return res.status(404).json({ message: "Restaurant not fount" });
+    }
+    const orders = await Order.find({ restaurent: restaurent._id })
+      .populate("restaurent")
+      .populate("user");
+    res.json(orders);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+const updateOrderStatus = async (req: Request, res: Response) => {
+  try {
+    const { orderId } = req.params;
+    const { status } = req.body;
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    const restaurent = await Restaurent.findById(order.restaurent);
+    if (restaurent?.user?._id.toString() !== req.userId) {
+      res.status(401).send();
+    }
+    order.status = status;
+    await order.save();
+    res.status(200).json(order);
+  } catch (error) {
+    console.log(error);
+    throw new Error("Something went wrong");
+  }
+};
+
 export default {
+  getMyRestaurentOrders,
   getMyRestaurent,
   createMyRestaurent,
   updateMyRestaurent,
+  updateOrderStatus,
 };

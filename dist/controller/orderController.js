@@ -18,6 +18,18 @@ const order_1 = __importDefault(require("../model/order"));
 const STRIPE = new stripe_1.default(process.env.STRIPE_API_KEY);
 const FRONTEND_URL = process.env.CLIENT_ORIGIN;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
+const getMyOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const orders = yield order_1.default.find({ user: req.userId })
+            .populate("user")
+            .populate("restaurent");
+        res.json(orders);
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Something went wrong" });
+    }
+});
 const stripeWebhookHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     let event;
@@ -117,6 +129,7 @@ const createSession = (lineItems, orderId, deliveryPrice, restaurentId) => __awa
     return session;
 });
 exports.default = {
+    getMyOrders,
     createCheckOutSession,
     stripeWebhookHandler,
 };
